@@ -73,8 +73,6 @@ fn _remove(component: *Component) anyerror!void {
 const std = @import("std");
 const ui = @import("ui.zig");
 const ft = @import("../ft.zig");
-const cairo = @import("abi").cairo;
-const freetype = @import("abi").freetype;
 const Component = ui.Component;
 const Graphics = @import("../graphics.zig").Graphics;
 const ScaledFont = @import("../graphics.zig").ScaledFont;
