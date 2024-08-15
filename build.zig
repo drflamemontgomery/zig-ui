@@ -24,6 +24,8 @@ pub fn build(b: *std.Build) void {
     zigui_module.addImport("glfw", glfw_dep.module("mach-glfw"));
     zigui_module.addImport("gl", gl_bindings);
 
+    zigui_module.linkSystemLibrary("glfw3", .{});
+    zigui_module.linkSystemLibrary("GL", .{});
     zigui_module.linkSystemLibrary("cairo", .{});
     zigui_module.linkSystemLibrary("freetype", .{});
     zigui_module.linkSystemLibrary("fontconfig", .{});
