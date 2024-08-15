@@ -6,19 +6,27 @@ after_deinit: ?fn(std.mem.Allocator, *Window) anyerror!void = null,
 
 window: Window,
 
-var arena: std.heap.ArenaAllocator = undefined;
+var arena_state: std.heap.ArenaAllocator = undefined;
+var arena: std.mem.Allocator = undefined;
 
 pub fn init() !void {
-    arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    arena_state = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    arena = arena_state.allocator();
+
+    ScaledFont.init();
+    Window.init();
 }
 
 pub fn deinit() !void {
+    Window.terminate();
+    ScaledFont.deinit();
+
     arena.deinit();
 }
 
 pub fn create(options:Options) Self {
 
-    const window = Window.new(arena.allocator(), options.title);
+    const window = Window.new(arena, options.title);
 
     return .{
         .window = window,
@@ -32,6 +40,7 @@ pub fn create(options:Options) Self {
 }
 
 pub fn run(self:Self) !void {
+    Window.current = &self.window;
     if(self.init) |init_cb| {
         init_cb(arena, &self.window);
     }
@@ -57,6 +66,7 @@ const std = @import("std");
 
 const Self = @This();
 const Window = @import("Window.zig");
+const ScaledFont = @import("graphics.zig").ScaledFont;
 const Options = struct {
     title: []const u8,
 
