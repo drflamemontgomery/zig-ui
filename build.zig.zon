@@ -10,10 +10,6 @@
             .url = "https://pkg.machengine.org/mach-glfw/fb4ae48540454270ab969c8c645bbc6eff3c2dfb.tar.gz",
             .hash = "12201ae68707aefe54ffb9d8c64721d4a2ac36186f8bd390e4f670033fec6737664a",
         },
-        .mach_freetype = .{
-            .url = "https://pkg.machengine.org/mach-freetype/86fc8024d4ddd53df75dfa4f3ad4eebe0b1b4284.tar.gz",
-            .hash = "12206251ed342f400b80abf3c338521f5d8c83eb596899abf77a2afe0cfd46e61ff0",
-        },
     },
     .paths = .{
         "build.zig",
