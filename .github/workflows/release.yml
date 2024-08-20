@@ -20,7 +20,7 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
       - uses: ./.github/dependencies
-      - uses: ./.github/zig
+      - uses: drflamemontgomery/setup-zig
         with:
           version: 0.13.0-dev.351+64ef45eb0
 
@@ -38,7 +38,7 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
       - uses: ./.github/dependencies
-      - uses: ./.github/zig
+      - uses: drflamemontgomery/setup-zig
         with:
           version: 0.13.0-dev.351+64ef45eb0
 
