@@ -7,7 +7,7 @@ component: ?Component = null,
 /// Create a `Text` object that automatically caches glyphs and allocates
 /// a font
 pub fn new(allocator: std.mem.Allocator, text: []const u8, options: Options) !Self {
-    const glyphs = try GlyphCache.new(allocator, text, options.font, options.size);
+    const glyphs = try GlyphCache.new(allocator, text, options.font orelse ft.Library.default_font_file, options.size);
 
     return Self{
         .text = text,
@@ -83,6 +83,6 @@ const Err = error{
     FAILED_TO_CREATE_FACE,
 };
 const Options = struct {
-    font: []const u8 = "/usr/share/fonts/steam-fonts/arial.ttf",
+    font: ?[]const u8 = null,
     size: f64 = 12,
 };

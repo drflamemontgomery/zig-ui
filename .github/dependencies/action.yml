@@ -1,0 +1,13 @@
+name: Project Install Dependencies
+inputs:
+  version:
+    default: 'master'
+    required: true
+    type: string
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install Libraries
+      run: sudo apt-get install libglfw3-dev libopengl-dev libfreetype-dev  libcairo2-dev
+      shell: bash

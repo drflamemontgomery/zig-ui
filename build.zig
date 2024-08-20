@@ -24,7 +24,7 @@ pub fn build(b: *std.Build) void {
     zigui_module.addImport("glfw", glfw_dep.module("mach-glfw"));
     zigui_module.addImport("gl", gl_bindings);
 
-    zigui_module.linkSystemLibrary("glfw3", .{});
+    zigui_module.linkSystemLibrary("glfw", .{});
     zigui_module.linkSystemLibrary("GL", .{});
     zigui_module.linkSystemLibrary("cairo", .{});
     zigui_module.linkSystemLibrary("freetype", .{});
@@ -45,4 +45,23 @@ pub fn build(b: *std.Build) void {
 
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&run_zigui_unit_tests.step);
+
+    const examples_step = b.step("examples", "Run examples");
+    const example_files = .{
+        "hello_world"
+    };
+    inline for (example_files) |example| {
+        const example_step = b.addExecutable(.{
+            .name = example,
+            .root_source_file = b.path("examples/" ++ example ++ "/main.zig"),
+            .target = target,
+            .optimize = optimize,
+        });
+        example_step.root_module.addImport("zig-ui", zigui_module);
+        example_step.linkLibC();
+        const example_install = b.addInstallArtifact(example_step, .{
+             .dest_dir = .{ .override = .prefix }, 
+        });
+        examples_step.dependOn(&example_install.step);
+    }
 }

@@ -6,6 +6,8 @@ const ui = @import("ui/ui.zig");
 pub const Library = struct {
     /// The registered Library for the application
     pub var current: ?Library = null;
+    pub var default_font:Face = undefined;
+    pub var default_font_file: []u8 = undefined;
 
     /// The Internal c library handle
     library: c.FT_Library,
@@ -23,26 +25,17 @@ pub const Library = struct {
         if(c.FcInit() == 0) {
             return Err.FAILED_TO_INIT_FREETYPE;       
         }
-        //const fonts = c.FcConfigGetFonts(null, c.FcSetSystem);
-        //defer c.FcFontSetDestroy(fonts);
-
-        //for(0..@intCast(fonts[0].nfont)) |i| {
-        //    var value:c.FcValue = undefined;
-        //    _ = c.FcPatternGet(fonts[0].fonts[i], "file", 0, &value);
-        //    //const std = @import("std");
-        //    switch(value.type) {
-        //        c.FcTypeString => {},//std.debug.print("file: {s}\n", .{value.u.s}),
-        //        else => {},
-        //    }
-        //}
 
         current = .{
             .library = library,
         };
+        
+        default_font = try current.?.getDefault(0);
+        default_font_file = try getDefaultFontFile(std.heap.page_allocator);
         return current.?;
     }
 
-    pub fn getDefault(self: Self, face_index: i64) !Face {
+    fn getDefaultFontFile(allocator:std.mem.Allocator) ![]u8 {
         const pattern = c.FcPatternCreate() orelse return Err.FAILED_TO_INIT_FREETYPE;
         defer c.FcPatternDestroy(pattern);
 
@@ -57,9 +50,19 @@ pub const Library = struct {
         _ = c.FcPatternGetString(match, c.FC_FILE, 0, &fontfile);
    
 
-       const font_file_slice: []const u8 = std.mem.span(fontfile);
+       const font_file_slice: []u8 = std.mem.span(fontfile);
+       const ret_file_slice: []u8 = try allocator.alloc(u8, font_file_slice.len);
 
-       return self.newFace(font_file_slice, face_index);
+       std.mem.copyBackwards(u8, ret_file_slice, font_file_slice);
+
+       return ret_file_slice;
+    }
+
+    fn getDefault(self: Self, face_index: i64) !Face {
+        const font_file = try getDefaultFontFile(std.heap.page_allocator);
+        defer std.heap.page_allocator.destroy(&font_file[0]);
+
+        return self.newFace(font_file, face_index);
     }
 
     /// Load a c font from a `path` at index
@@ -73,6 +76,7 @@ pub const Library = struct {
 
     /// Free the c library resources
     pub fn destroy(self: Self) !void {
+        std.heap.page_allocator.free(default_font_file);
         c.FcFini();
         if (c.FT_Done_FreeType(self.library) != 0) {
             return Err.FAILED_TO_DESTROY_FREETYPE;
