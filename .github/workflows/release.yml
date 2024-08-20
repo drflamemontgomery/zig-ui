@@ -42,7 +42,7 @@ jobs:
         with:
           version: 0.13.0-dev.351+64ef45eb0
 
-      - name: Build Project
+      - name: Build Examples
         run: |
           zig build --fetch
-          zig build
+          zig build examples
