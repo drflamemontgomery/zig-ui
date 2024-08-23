@@ -1,7 +1,11 @@
 const std = @import("std");
 const zigui = @import("zig-ui");
-const App = zigui.App;
+const App = zigui.App(AppState);
 const Text = zigui.ui.Text;
+
+const AppState = struct {
+    text: Text,
+};
 
 pub fn main() !void {
     try App.init();
@@ -17,15 +21,12 @@ pub fn main() !void {
     });
     defer app.destroy();
 
-
     try app.run();
 }
 
-var text: Text = undefined;
-
 fn init(app: *App) anyerror!void {
-    text = try Text.new(App.arena, "Hello World!", .{});
-    _ = try text.getComponent(App.arena, &app.window.ctx.component);
+    app.state.text = try Text.new(App.arena, "Hello World!", .{});
+    _ = try app.state.text.getComponent(App.arena, &app.window.ctx.component);
 }
 
 fn mainLoop(app: *App) anyerror!void {

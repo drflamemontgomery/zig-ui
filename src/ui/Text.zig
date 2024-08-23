@@ -37,9 +37,8 @@ pub fn getComponent(self: *Self, allocator: std.mem.Allocator, parent: ?*Compone
 pub fn update(component: *Component) anyerror!void {
     const self: *const Self = @alignCast(@ptrCast(component.context));
     if (!component.invalid) return;
-    std.debug.print("[Text]: {s}\n", .{self.text});
-    component.calculatedSize.width = @floatCast(self.glyphs.width);
-    component.calculatedSize.height = @floatCast(self.glyphs.height);
+    component.calculated_size.width = @floatCast(self.glyphs.width);
+    component.calculated_size.height = @floatCast(self.glyphs.height);
 }
 
 pub fn sync(component: *Component, graphics: *Graphics) anyerror!void {

@@ -109,7 +109,7 @@ pub fn update(self: *Self) !void {
     }
 
     try Context.update(&self.ctx.component);
-    try Context.sync(&self.ctx.component, &self.graphics);
+    try Context.syncAndCalculateSize(&self.ctx.component, &self.graphics);
 }
 
 pub fn shouldClose(self: Self) bool {

@@ -11,7 +11,7 @@ pub fn new(allocator: std.mem.Allocator) Self {
         .context = &self,
         .children = std.ArrayList(*Component).init(allocator),
         .update = update,
-        .sync = sync,
+        .sync = syncAndCalculateSize,
     };
 
     self.component = component;
@@ -46,6 +46,14 @@ fn _sync(component: *Component, graphics: *Graphics) anyerror!void {
         try child.sync(child, graphics);
         try _sync(child, graphics);
     }
+}
+
+pub fn syncAndCalculateSize(component: *Component, graphics: *Graphics) anyerror!void {
+    component.size = .{
+        .width = @floatFromInt(graphics.surface.width),
+        .height = @floatFromInt(graphics.surface.height),
+    };
+    try sync(component, graphics);
 }
 
 const std = @import("std");
