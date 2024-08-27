@@ -48,7 +48,8 @@ pub fn build(b: *std.Build) void {
 
     const examples_step = b.step("examples", "Run examples");
     const example_files = .{
-        "hello_world"
+        "hello_world",
+        "fps",
     };
     inline for (example_files) |example| {
         const example_step = b.addExecutable(.{
@@ -60,7 +61,7 @@ pub fn build(b: *std.Build) void {
         example_step.root_module.addImport("zig-ui", zigui_module);
         example_step.linkLibC();
         const example_install = b.addInstallArtifact(example_step, .{
-             .dest_dir = .{ .override = .prefix }, 
+            .dest_dir = .{ .override = .prefix },
         });
         examples_step.dependOn(&example_install.step);
     }

@@ -6,6 +6,8 @@ pub fn App(State: type) type {
         deinit: ?*const fn (*Self) anyerror!void = null,
         after_deinit: ?*const fn (*Self) anyerror!void = null,
 
+        dt: f128 = 1.0 / 60.0,
+
         window: *Window,
         state: State,
 
@@ -64,8 +66,11 @@ pub fn App(State: type) type {
 
             if (self.main_loop) |main_loop_cb| {
                 while (!self.window.shouldClose()) {
+                    const stamp = std.time.nanoTimestamp();
                     try self.window.update();
                     try main_loop_cb(self);
+                    const end_stamp = std.time.nanoTimestamp();
+                    self.dt = @as(f128, @floatFromInt(end_stamp - stamp)) / 1000000000.0;
                 }
             }
 

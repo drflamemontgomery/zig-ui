@@ -148,5 +148,7 @@ pub const Color = struct {
     }
 };
 
-pub const Component = @import("Component.zig");
+//pub const Component = @import("Component.zig");
+pub const GenericComponent = @import("component.zig").GenericComponent;
+pub const Component = @import("component.zig").Component;
 pub const Text = @import("Text.zig");

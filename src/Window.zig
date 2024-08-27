@@ -4,7 +4,7 @@ var gl_procs: gl.ProcTable = undefined;
 pub var current: ?*Self = null;
 
 window: glfw.Window,
-ctx: Context,
+ctx: GenericComponent,
 graphics: gfx.Graphics,
 font_lib: ft.Library,
 
@@ -105,11 +105,11 @@ pub fn update(self: *Self) !void {
     if (frame_size.width != self.graphics.surface.width or frame_size.height != self.graphics.surface.height) {
         try self.resize(frame_size.width, frame_size.height);
 
-        self.ctx.component.invalidate();
+        self.ctx.invalidate();
     }
 
-    try Context.update(&self.ctx.component);
-    try Context.syncAndCalculateSize(&self.ctx.component, &self.graphics);
+    try Context.update(&self.ctx);
+    try Context.syncAndCalculateSize(&self.ctx, &self.graphics);
 }
 
 pub fn shouldClose(self: Self) bool {
@@ -143,3 +143,4 @@ const gl = @import("gl");
 const gfx = @import("graphics.zig");
 const ft = @import("ft.zig");
 const Context = @import("Context.zig");
+const GenericComponent = @import("ui/ui.zig").GenericComponent;

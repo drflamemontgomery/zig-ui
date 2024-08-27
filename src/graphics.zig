@@ -256,23 +256,17 @@ pub const ScaledFont = struct {
 
 pub const GlyphCache = struct {
     allocator: std.mem.Allocator,
-    glyphs: []c.cairo_glyph_t,
+    glyphs: ?[]c.cairo_glyph_t = null,
     utf8_text: []const u8,
     font: []const u8,
     size: f64,
     width: f64,
     height: f64,
+    invalid: bool = true,
 
     pub fn new(allocator: std.mem.Allocator, utf8_text: []const u8, font: []const u8, size: f64) !Self {
-        const scaled_font = try ScaledFont.get(size, font);
-
-        const glyphs: []c.cairo_glyph_t = try allocator.alloc(c.cairo_glyph_t, utf8_text.len);
-        errdefer allocator.free(glyphs);
-
-        _ = try scaled_font.textToGlyphs(0, 0, utf8_text, glyphs);
         var self = Self{
             .allocator = allocator,
-            .glyphs = glyphs,
             .utf8_text = utf8_text,
             .font = font,
             .size = size,
@@ -284,15 +278,19 @@ pub const GlyphCache = struct {
         return self;
     }
 
-    pub fn setFont(self: *Self, font: []const u8) !void {
-        const scaled_font = try ScaledFont.get(self.size, font);
-        _ = try scaled_font.textToGlyphs(0, 0, self.utf8_text, self.glyphs);
+    pub fn setText(self: *Self, text: []const u8) void {
+        self.invalidate();
+        self.utf8_text = text;
+    }
 
+    pub fn setFont(self: *Self, font: []const u8) void {
+        self.invalidate();
         self.font = font;
         self.calculateSize();
     }
 
     pub fn setSize(self: *Self, size: f64) void {
+        self.invalidate();
         self.size = size;
         self.calculateSize();
     }
@@ -309,8 +307,28 @@ pub const GlyphCache = struct {
         self.height = extents.height;
     }
 
-    pub fn destroy(self: Self) void {
-        self.allocator.free(self.glyphs);
+    pub fn invalidate(self: *Self) void {
+        self.invalid = true;
+    }
+
+    pub fn validate(self: *Self) !void {
+        if (!self.invalid) return;
+        if (self.glyphs) |_| {
+            self.destroy();
+        }
+        self.glyphs = try self.allocator.alloc(c.cairo_glyph_t, self.utf8_text.len);
+        errdefer self.allocator.free(self.glyphs.?);
+
+        const scaled_font = try ScaledFont.get(self.size, self.font);
+        _ = try scaled_font.textToGlyphs(0, 0, self.utf8_text, self.glyphs.?);
+        self.invalid = false;
+    }
+
+    pub fn destroy(self: *Self) void {
+        if(self.glyphs) |glyphs| {
+            self.allocator.free(glyphs);
+            self.glyphs = null;
+        }
     }
 
     const Self = @This();
