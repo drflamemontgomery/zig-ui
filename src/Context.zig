@@ -1,21 +1,19 @@
 /// Root node for UI trees.
 /// It handles all the updating and syncing of
-/// `GenericComponent`s
+/// `Component`s
 
-pub fn emptyFn(component:*GenericComponent) anyerror!void {
+pub fn emptyFn(component:*Component) anyerror!void {
     _ = component;
 }
-pub fn emptySync(component:*GenericComponent, graphics:*Graphics) anyerror!void {
+pub fn emptySync(component:*Component, graphics:*Graphics) anyerror!void {
     _ = component;
     _ = graphics;
 }
 
-pub fn new(allocator:std.mem.Allocator) GenericComponent {
+pub fn new(allocator:std.mem.Allocator) Component {
     return .{
         .parent = null,
-        .children = std.ArrayList(*GenericComponent).init(allocator),
-
-        .context = undefined,
+        .children = std.ArrayList(*Component).init(allocator),
 
         .vtable = &.{
             .update = emptyFn,
@@ -26,7 +24,7 @@ pub fn new(allocator:std.mem.Allocator) GenericComponent {
 }
 
 /// Update all the components in the Context Tree
-pub fn update(component: *GenericComponent) !void {
+pub fn update(component: *Component) !void {
     for (component.children.items) |child| {
         try update(child);
         try child.vtable.update(child);
@@ -34,7 +32,7 @@ pub fn update(component: *GenericComponent) !void {
 }
 
 /// Sync occurs after updating. Use to update the graphics rendering
-pub fn sync(component: *GenericComponent, graphics: *Graphics) anyerror!void {
+pub fn sync(component: *Component, graphics: *Graphics) anyerror!void {
     if (component.invalid) {
         graphics.setSourceRGB(0, 0, 0);
         graphics.clear();
@@ -44,18 +42,14 @@ pub fn sync(component: *GenericComponent, graphics: *Graphics) anyerror!void {
     try _sync(component, graphics);
 }
 
-pub fn destroy(self: *Self) void {
-    self.component.destroy();
-}
-
-fn _sync(component: *GenericComponent, graphics: *Graphics) anyerror!void {
+fn _sync(component: *Component, graphics: *Graphics) anyerror!void {
     for (component.children.items) |child| {
         try child.vtable.sync(child, graphics);
         try _sync(child, graphics);
     }
 }
 
-pub fn syncAndCalculateSize(component: *GenericComponent, graphics: *Graphics) anyerror!void {
+pub fn syncAndCalculateSize(component: *Component, graphics: *Graphics) anyerror!void {
     component.size = .{
         .width = @floatFromInt(graphics.surface.width),
         .height = @floatFromInt(graphics.surface.height),
@@ -65,7 +59,6 @@ pub fn syncAndCalculateSize(component: *GenericComponent, graphics: *Graphics) a
 
 const std = @import("std");
 const ui = @import("ui/ui.zig");
-const GenericComponent = ui.GenericComponent;
 const Component = ui.Component;
 const Graphics = @import("graphics.zig").Graphics;
 
@@ -108,8 +101,7 @@ test "create_text_components" {
 
     try testing.expect(root.children.items.len == 0);
 
-    var text = Component(ui.Text).new(std.testing.allocator, try ui.Text.new(std.testing.allocator, "Hello", .{}));
-    text.initialize();
+    var text = try ui.Text.new(std.testing.allocator, "Hello", .{});
     try root.addChild(&text.component);
 
     defer text.destroy();
@@ -117,10 +109,10 @@ test "create_text_components" {
     try testing.expect(root.children.items.len == 1);
 
     // Get the Text object from the component
-    const _text: *ui.Text = root.children.items[0].getContext(ui.Text);
+    const _text: *ui.Text = root.children.items[0].getStruct(ui.Text);
     try testing.expect(std.mem.eql(u8, _text.text, "Hello"));
 
-    text.context.setText("World!");
+    text.setText("World!");
     try testing.expect(std.mem.eql(u8, _text.text, "World!"));
     
 

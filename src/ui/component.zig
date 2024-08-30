@@ -3,8 +3,7 @@ const gfx = @import("../graphics.zig");
 const Position = @import("ui.zig").Position;
 const Size = @import("ui.zig").Size;
 
-pub const GenericComponent = struct {
-    context: *anyopaque,
+pub const Component = struct {
     parent: ?*Self = null,
     children: std.ArrayList(*Self),
     invalid: bool = true,
