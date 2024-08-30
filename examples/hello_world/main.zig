@@ -5,7 +5,7 @@ const Text = zigui.ui.Text;
 const Component = zigui.ui.Component;
 
 const AppState = struct {
-    text: Component(Text),
+    text: Component(Text) = undefined,
 };
 
 pub fn main() !void {
