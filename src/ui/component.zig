@@ -10,23 +10,25 @@ pub const GenericComponent = struct {
     invalid: bool = true,
 
     pos: Position(f32) = .{ .x = 0, .y = 0 },
-    size: ?Size(f32) = null,
     calculated_size: Size(f32) = .{ .width = 0, .height = 0 },
 
     vtable: *const VTable,
 
     pub fn addChild(self: *Self, child: *Self) !void {
         try self.children.append(child);
+        child.parent = self;
     }
 
     pub fn addChildAt(self: *Self, child: *Self, i: usize) void {
         self.children.insert(i, child);
+        child.parent = self;
     }
 
     pub fn removeChild(self: *Self, c: *Self) bool {
         for (self.children.items, 0..) |child, i| {
             if (c == child) {
                 _ = self.children.orderedRemove(i);
+                c.parent = null;
                 return true;
             }
         }

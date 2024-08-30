@@ -21,7 +21,7 @@ pub fn setText(self: *Self, text:[]const u8) void {
 }
 
 pub fn update(component: *GenericComponent) anyerror!void {
-    const self: *const Self = @alignCast(@ptrCast(component.context));
+    const self = component.getContext(Self);
     if (!component.invalid) return;
     component.calculated_size.width = @floatCast(self.glyphs.width);
     component.calculated_size.height = @floatCast(self.glyphs.height);

@@ -56,7 +56,7 @@ fn _sync(component: *GenericComponent, graphics: *Graphics) anyerror!void {
 }
 
 pub fn syncAndCalculateSize(component: *GenericComponent, graphics: *Graphics) anyerror!void {
-    component.size = .{
+    component.calculated_size = .{
         .width = @floatFromInt(graphics.surface.width),
         .height = @floatFromInt(graphics.surface.height),
     };

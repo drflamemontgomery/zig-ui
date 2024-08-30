@@ -34,11 +34,10 @@ pub fn App(State: type) type {
             const window: *Window = &(try arena.alloc(Window, 1))[0];
             window.* = try Window.new(arena, options.title, options.width, options.height);
             try window.resize(options.width, options.height);
-
             return .{
                 .window = window,
 
-                .state = undefined,
+                .state = std.mem.zeroInit(State, .{}),
 
                 .init = options.init,
                 .after_init = options.after_init,
