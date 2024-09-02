@@ -5,7 +5,7 @@ const Text = zigui.ui.Text;
 const Component = zigui.ui.Component;
 
 const AppState = struct {
-    text: Component(Text) = undefined,
+    text: Text = undefined,
 };
 
 pub fn main() !void {
@@ -26,8 +26,7 @@ pub fn main() !void {
 }
 
 fn init(app: *App) anyerror!void {
-    app.state.text = Component(Text).new(App.arena, try Text.new(App.arena, "Hello World!", .{}));
-    app.state.text.initialize();
+    app.state.text = try Text.new(App.arena, "Hello World!", .{});
     try app.window.ctx.addChild(&app.state.text.component);
 }
 

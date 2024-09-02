@@ -4,7 +4,7 @@ var gl_procs: gl.ProcTable = undefined;
 pub var current: ?*Self = null;
 
 window: glfw.Window,
-ctx: GenericComponent,
+ctx: Component,
 graphics: gfx.Graphics,
 font_lib: ft.Library,
 
@@ -143,4 +143,4 @@ const gl = @import("gl");
 const gfx = @import("graphics.zig");
 const ft = @import("ft.zig");
 const Context = @import("Context.zig");
-const GenericComponent = @import("ui/ui.zig").GenericComponent;
+const Component = @import("ui/ui.zig").Component;
