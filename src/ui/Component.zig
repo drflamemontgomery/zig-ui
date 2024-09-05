@@ -54,14 +54,26 @@ pub fn getStruct(self: *Self, T: type) *T {
     return @fieldParentPtr("component", self);
 }
 
+pub fn getAbsPos(self: *Self) Position(f32) {
+    var pos = self.pos;
+    var current = self;
+    while(current.parent) |parent| {
+        current = parent;
+        pos.x += current.x;
+        pos.y += current.y;
+    }
+    return pos;
+}
+
 const std = @import("std");
 const gfx = @import("../graphics.zig");
 const Position = @import("ui.zig").Position;
 const Size = @import("ui.zig").Size;
+const App = @import("../App.zig");
 
 const Self = @This();
 const VTable = struct {
-    update: *const fn (*Self) anyerror!void,
-    sync: *const fn (*Self, *gfx.Graphics) anyerror!void,
+    update: *const fn (*Self, *App) anyerror!void,
+    sync: *const fn (*Self, *App, *gfx.Graphics) anyerror!void,
     remove: *const fn (*Self) anyerror!void,
 };

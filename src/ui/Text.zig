@@ -30,14 +30,16 @@ pub fn setText(self: *Self, text:[]const u8) void {
     self.glyphs.setText(text);
 }
 
-pub fn update(component: *Component) anyerror!void {
+pub fn update(component: *Component, app:*App) anyerror!void {
+    _ = app;
     const self = component.getStruct(Self);
     if (!component.invalid) return;
     component.calculated_size.width = @floatCast(self.glyphs.width);
     component.calculated_size.height = @floatCast(self.glyphs.height);
 }
 
-pub fn sync(component: *Component, graphics: *Graphics) anyerror!void {
+pub fn sync(component: *Component, app:*App, graphics: *Graphics) anyerror!void {
+    _ = app;
     const self = component.getStruct(Self);
     if (!component.invalid) return;
     component.invalid = false;
@@ -68,6 +70,7 @@ const Component = ui.Component;
 const Graphics = @import("../graphics.zig").Graphics;
 const ScaledFont = @import("../graphics.zig").ScaledFont;
 const GlyphCache = @import("../graphics.zig").GlyphCache;
+const App = @import("../App.zig");
 
 const Self = @This();
 const Err = error{

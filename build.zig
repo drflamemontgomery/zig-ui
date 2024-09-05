@@ -58,6 +58,13 @@ pub fn build(b: *std.Build) void {
             .target = target,
             .optimize = optimize,
         });
+        const app_state_module = b.addModule(example ++ "_AppState", .{
+            .target = target,
+            .optimize = optimize,
+            .root_source_file = b.path("examples/" ++ example ++ "/AppState.zig"),
+        });
+        app_state_module.addImport("zig-ui", zigui_module);
+        zigui_module.addImport("AppState", app_state_module);
         example_step.root_module.addImport("zig-ui", zigui_module);
         example_step.linkLibC();
         const example_install = b.addInstallArtifact(example_step, .{

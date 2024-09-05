@@ -1,13 +1,8 @@
 const std = @import("std");
 const zigui = @import("zig-ui");
-const App = zigui.App(AppState);
+const App = zigui.App;
 const Text = zigui.ui.Text;
-const Component = zigui.ui.Component;
 
-const AppState = struct {
-    text: Text = undefined,
-    fps: []u8 = undefined,
-};
 
 pub fn main() !void {
     try App.init();

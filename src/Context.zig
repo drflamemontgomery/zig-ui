@@ -1,16 +1,20 @@
 /// Root node for UI trees.
 /// It handles all the updating and syncing of
 /// `Component`s
-
-pub fn emptyFn(component:*Component) anyerror!void {
+pub fn emptyFn(component: *Component, app: *App) anyerror!void {
     _ = component;
+    _ = app;
 }
-pub fn emptySync(component:*Component, graphics:*Graphics) anyerror!void {
+pub fn emptySync(component: *Component, app: *App, graphics: *Graphics) anyerror!void {
     _ = component;
+    _ = app;
     _ = graphics;
 }
+pub fn emptyRemoveFn(component: *Component) anyerror!void {
+    _ = component;
+}
 
-pub fn new(allocator:std.mem.Allocator) Component {
+pub fn new(allocator: std.mem.Allocator) Component {
     return .{
         .parent = null,
         .children = std.ArrayList(*Component).init(allocator),
@@ -18,49 +22,50 @@ pub fn new(allocator:std.mem.Allocator) Component {
         .vtable = &.{
             .update = emptyFn,
             .sync = emptySync,
-            .remove = emptyFn,
+            .remove = emptyRemoveFn,
         },
     };
 }
 
 /// Update all the components in the Context Tree
-pub fn update(component: *Component) !void {
+pub fn update(component: *Component, app: *App) !void {
     for (component.children.items) |child| {
-        try update(child);
-        try child.vtable.update(child);
+        try update(child, app);
+        try child.vtable.update(child, app);
     }
 }
 
 /// Sync occurs after updating. Use to update the graphics rendering
-pub fn sync(component: *Component, graphics: *Graphics) anyerror!void {
+pub fn sync(component: *Component, app: *App, graphics: *Graphics) anyerror!void {
     if (component.invalid) {
         graphics.setSourceRGB(0, 0, 0);
         graphics.clear();
         component.invalid = false;
     }
 
-    try _sync(component, graphics);
+    try _sync(component, app, graphics);
 }
 
-fn _sync(component: *Component, graphics: *Graphics) anyerror!void {
+fn _sync(component: *Component, app: *App, graphics: *Graphics) anyerror!void {
     for (component.children.items) |child| {
-        try child.vtable.sync(child, graphics);
-        try _sync(child, graphics);
+        try child.vtable.sync(child, app, graphics);
+        try _sync(child, app, graphics);
     }
 }
 
-pub fn syncAndCalculateSize(component: *Component, graphics: *Graphics) anyerror!void {
+pub fn syncAndCalculateSize(component: *Component, app: *App, graphics: *Graphics) anyerror!void {
     component.calculated_size = .{
         .width = @floatFromInt(graphics.surface.width),
         .height = @floatFromInt(graphics.surface.height),
     };
-    try sync(component, graphics);
+    try sync(component, app, graphics);
 }
 
 const std = @import("std");
 const ui = @import("ui/ui.zig");
 const Component = ui.Component;
 const Graphics = @import("graphics.zig").Graphics;
+const App = @import("App.zig");
 
 const Self = @This();
 
@@ -73,31 +78,28 @@ const ft = @import("ft.zig");
 const ContextComponent = ui.Component(Self);
 // Test creation of a Root Context
 test "create_root_component" {
-    var graphics = try Graphics.new(std.testing.allocator, 320, 320);
-    defer graphics.destroy();
+    try App.init();
+    defer App.deinit();
 
-    var root = new(std.testing.allocator);
-    defer root.destroy();
+    var app = try App.create(.{ .title = "" });
+    defer app.destroy();
 
-    try testing.expect(root.children.items.len == 0);
+    const root = &app.window.ctx;
+    const graphics = &app.window.graphics;
+    try testing.expect(app.window.ctx.children.items.len == 0);
 
-    try update(&root);
-    try sync(&root, &graphics);
+    try update(root, &app);
+    try sync(root, &app, graphics);
 }
 
 test "create_text_components" {
-    // We need to initialize Font Libraries for Text objects to be created
-    const ScaledFont = @import("graphics.zig").ScaledFont;
-    _ = try ft.Library.init();
+    try App.init();
+    defer App.deinit();
 
-    ScaledFont.init(std.testing.allocator);
-    defer ScaledFont.deinit();
-
-    var graphics = try Graphics.new(std.testing.allocator, 320, 320);
-    defer graphics.destroy();
-
-    var root = new(std.testing.allocator);
-    defer root.destroy();
+    var app = try App.create(.{ .title = "" });
+    defer app.destroy();
+    var root = &app.window.ctx;
+    const graphics = &app.window.graphics;
 
     try testing.expect(root.children.items.len == 0);
 
@@ -114,8 +116,7 @@ test "create_text_components" {
 
     text.setText("World!");
     try testing.expect(std.mem.eql(u8, _text.text, "World!"));
-    
 
-    try update(&root);
-    try sync(&root, &graphics);
+    try update(root, &app);
+    try sync(root, &app, graphics);
 }
