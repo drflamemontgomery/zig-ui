@@ -15,6 +15,30 @@ pub fn Size(comptime T: type) type {
     };
 }
 
+pub fn AABB(comptime T: type) type {
+    return struct {
+        usingnamespace Position(T);
+        usingnamespace Size(T);
+
+        pub fn fromStructs(pos: Position(T), size: Size(T)) Self {
+            return .{
+                .x = pos.x,
+                .y = pos.y,
+                .width = size.width,
+                .height = size.height,
+            };
+        }
+
+        pub fn contains(self: Self, pos: Position(T)) Self {
+            const x_dif = pos.x - self.x;
+            const y_dif = pos.y - self.y;
+            return x_dif <= self.width and x_dif >= 0 and y_dif <= self.height and y_dif >= 0;
+        }
+
+        const Self = @This();
+    };
+}
+
 pub const Color = struct {
     r: f32,
     g: f32,
@@ -32,13 +56,13 @@ pub const Color = struct {
 
     pub fn fromHSL(h: i32, s: f32, l: f32) Self {
         const chroma = (1 - @abs(2 * l - 1)) * s;
-        const match = l - chroma/2;
+        const match = l - chroma / 2;
         return fromHueChroma(h, chroma, match);
     }
 
     fn fromHueChroma(h: i32, chroma: f32, match: f32) Self {
         const hue = @mod(h, 360);
-        const hueD:f32 = @as(f32, @floatFromInt(hue)) / 60;
+        const hueD: f32 = @as(f32, @floatFromInt(hue)) / 60;
         const mid = chroma * (1.0 - @abs(@mod(hueD, 2) - 1)) + match;
         const c = chroma + match;
 
@@ -58,14 +82,14 @@ pub const Color = struct {
 
     pub fn printHex(self: Self) void {
         std.debug.print("{} {} {}\n", .{ self.r, self.g, self.b });
-        std.debug.print("#{X:0>2}{X:0>2}{X:0>2}\n", self.getBytes()); 
+        std.debug.print("#{X:0>2}{X:0>2}{X:0>2}\n", self.getBytes());
     }
 
-    pub fn getBytes(self:Self) struct { u8, u8, u8 } {
+    pub fn getBytes(self: Self) struct { u8, u8, u8 } {
         const r: u8 = @truncate(@min(0xFF, @as(u32, @intFromFloat(@trunc(@round(self.r * 255))))));
         const g: u8 = @truncate(@min(0xFF, @as(u32, @intFromFloat(@trunc(@round(self.g * 255))))));
         const b: u8 = @truncate(@min(0xFF, @as(u32, @intFromFloat(@trunc(@round(self.b * 255))))));
-        return .{r, g, b};
+        return .{ r, g, b };
     }
 
     const Self = @This();
@@ -83,7 +107,7 @@ pub const Color = struct {
         try testing.expectEqual(191, val2[2]);
     }
 
-    test "HSV values" {   
+    test "HSV values" {
         const val1 = fromHSV(47, 0.12, 0.95).getBytes();
         try testing.expectEqual(242, val1[0]);
         try testing.expectEqual(236, val1[1]);
@@ -108,7 +132,7 @@ pub const Color = struct {
         try testing.expectEqual(121, val5[0]);
         try testing.expectEqual(63, val5[1]);
         try testing.expectEqual(140, val5[2]);
-        
+
         const val6 = fromHSV(343, 0.22, 0.77).getBytes();
         try testing.expectEqual(196, val6[0]);
         try testing.expectEqual(153, val6[1]);
@@ -140,7 +164,7 @@ pub const Color = struct {
         try testing.expectEqual(172, val5[0]);
         try testing.expectEqual(77, val5[1]);
         try testing.expectEqual(203, val5[2]);
-        
+
         const val6 = fromHSL(343, 0.22, 0.77).getBytes();
         try testing.expectEqual(209, val6[0]);
         try testing.expectEqual(183, val6[1]);
@@ -149,4 +173,5 @@ pub const Color = struct {
 };
 
 pub const Component = @import("Component.zig");
+pub const Interactive = @import("Interactive.zig");
 pub const Text = @import("Text.zig");
