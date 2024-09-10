@@ -3,4 +3,5 @@ comptime {
     _ = @import("ft.zig");
     _ = @import("graphics.zig");
     _ = @import("ui/ui.zig");
+    _ = @import("ui/Interactive.zig");
 }

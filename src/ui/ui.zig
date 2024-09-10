@@ -17,8 +17,10 @@ pub fn Size(comptime T: type) type {
 
 pub fn AABB(comptime T: type) type {
     return struct {
-        usingnamespace Position(T);
-        usingnamespace Size(T);
+        x: T,
+        y: T,
+        width: T,
+        height: T,
 
         pub fn fromStructs(pos: Position(T), size: Size(T)) Self {
             return .{
@@ -29,7 +31,7 @@ pub fn AABB(comptime T: type) type {
             };
         }
 
-        pub fn contains(self: Self, pos: Position(T)) Self {
+        pub fn contains(self: Self, pos: Position(T)) bool {
             const x_dif = pos.x - self.x;
             const y_dif = pos.y - self.y;
             return x_dif <= self.width and x_dif >= 0 and y_dif <= self.height and y_dif >= 0;

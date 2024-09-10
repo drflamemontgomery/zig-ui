@@ -3,23 +3,20 @@ var gl_procs: gl.ProcTable = undefined;
 
 pub var current: ?*Self = null;
 
-window: blk: {
-    if (builtin.is_test) {
-        break :blk EmptyStruct;
-    } else {
-        break :blk glfw.Window;
-    }
-},
+window: WindowType,
 ctx: Component,
+active_interactive: ?*Interactive = null,
 graphics: gfx.Graphics,
 font_lib: ft.Library,
+mouse: Position(f64) = .{ .x = 0, .y = 0 },
 
 /// Call `Window.init()` before using the Window API
 pub fn init() Err!void {
-    if(builtin.is_test) {
+    if (builtin.is_test) {
         return;
     }
     if (!glfw.init(.{})) return Err.FAILED_TO_INITIALIZE_GLFW;
+    Internal.init(std.heap.page_allocator);
 }
 
 pub fn new(allocator: std.mem.Allocator, title: [*:0]const u8, width: u32, height: u32) !Self {
@@ -41,6 +38,8 @@ pub fn new(allocator: std.mem.Allocator, title: [*:0]const u8, width: u32, heigh
 
         glfw.makeContextCurrent(window);
         window.setInputModeStickyKeys(true);
+
+        Internal.setupEvents(window);
 
         if (!gl_procs.init(glfw.getProcAddress)) return error.FAILED_TO_INITIALIZE_OPENGL;
         gl.makeProcTableCurrent(&gl_procs);
@@ -66,6 +65,76 @@ pub fn new(allocator: std.mem.Allocator, title: [*:0]const u8, width: u32, heigh
     };
 
     return self;
+}
+
+fn handleEvents(self: Self) void {
+    const active_or_null = self.active_interactive;
+
+    if (active_or_null) |active| {
+        for (Internal.events) |event| {
+            self._handleEvent(active, event);
+        }
+    }
+}
+
+inline fn _handleEvent(self: Self, interactive: *Interactive, event: Internal.WindowEvent) void {
+    const pos = interactive.component.getAbsPos();
+    switch (event) {
+        .cursor_pos => |cursor| {
+            if (std.meta.eql(self.mouse, cursor)) {
+                interactive.vtable.handleEvent(.{
+                    .kind = .Check,
+                    .relX = cursor.x - pos.x,
+                    .relY = cursor.y - pos.y,
+                });
+            } else {
+                interactive.vtable.handleEvent(.{
+                    .kind = .Move,
+                    .relX = cursor.x - pos.x,
+                    .relY = cursor.y - pos.y,
+                });
+            }
+            self.mouse = pos;
+        },
+        .mouse_button => |button| {
+            switch (button.action) {
+                .press => {
+                    interactive.vtable.handleEvent(.{
+                        .kind = .Push,
+                        .relX = self.mouse.x - pos.x,
+                        .relY = self.mouse.y - pos.y,
+                        .button = @intFromEnum(button.button),
+                    });
+            },
+                .release => {},
+            }
+        },
+    }
+}
+
+pub fn getCursorPos(self: Self) Position(f32) {
+    if (builtin.is_test) {
+        return .{ .x = 0, .y = 0 };
+    }
+    const pos = self.window.getCursorPos();
+    return .{
+        .x = @floatCast(pos.x),
+        .y = @floatCast(pos.y),
+    };
+}
+
+pub fn setActiveInteractive(self: *Self, interactive: ?*Interactive) void {
+    if (self.active_interactive) |active| {
+        active.*.is_active = false;
+    }
+    self.active_interactive = interactive;
+    if (interactive) |active| {
+        active.*.is_active = true;
+    }
+}
+
+pub fn getActiveInteractive(self: *Self) ?*Interactive {
+    return self.active_interactive;
 }
 
 pub fn resize(self: *Self, width: u32, height: u32) !void {
@@ -135,7 +204,7 @@ pub fn shouldClose(self: Self) bool {
 }
 
 pub fn destroy(self: Self) void {
-    if(builtin.is_test) {
+    if (builtin.is_test) {
         return;
     }
     self.window.destroy();
@@ -143,16 +212,25 @@ pub fn destroy(self: Self) void {
 
 /// Call `Window.terminate()` to clear resources
 pub fn terminate() void {
-    if(builtin.is_test) {
+    if (builtin.is_test) {
         return;
     }
     glfw.terminate();
+    Internal.deinit();
 }
 
 fn onGlfwError(code: c_int, message: [*c]const u8) callconv(.C) void {
     _ = code;
     std.debug.print("{s}\n", .{message});
 }
+
+const Internal = blk: {
+    if (builtin.is_test) {
+        break :blk EmptyStruct;
+    } else {
+        break :blk @import("WindowEventHandler.zig");
+    }
+};
 
 const Self = @This();
 const Err = error{
@@ -181,5 +259,15 @@ const gfx = @import("graphics.zig");
 const ft = @import("ft.zig");
 const Context = @import("Context.zig");
 const Component = @import("ui/ui.zig").Component;
+const Interactive = @import("ui/ui.zig").Interactive;
 const App = @import("App.zig");
 const EmptyStruct = @import("testing.zig").EmptyStruct;
+const Position = @import("ui/ui.zig").Position;
+
+const WindowType = blk: {
+    if (builtin.is_test) {
+        break :blk EmptyStruct;
+    } else {
+        break :blk glfw.Window;
+    }
+};

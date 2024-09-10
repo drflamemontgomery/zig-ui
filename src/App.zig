@@ -1,3 +1,5 @@
+pub var active_app: *Self = undefined;
+
 init: ?*const fn (*Self) anyerror!void = null,
 after_init: ?*const fn (*Self) anyerror!void = null,
 main_loop: ?*const fn (*Self) anyerror!void = null,
@@ -56,6 +58,7 @@ pub fn destroy(self: Self) void {
 }
 
 pub fn run(self: *Self) !void {
+    active_app = self;
     Window.current = self.window;
     defer Window.current = null;
 

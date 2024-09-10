@@ -59,8 +59,8 @@ pub fn getAbsPos(self: *Self) Position(f32) {
     var current = self;
     while(current.parent) |parent| {
         current = parent;
-        pos.x += current.x;
-        pos.y += current.y;
+        pos.x += current.pos.x;
+        pos.y += current.pos.y;
     }
     return pos;
 }

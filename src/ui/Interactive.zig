@@ -1,4 +1,5 @@
 size: Size(f32) = .{ .width = 100, .height = 100 },
+is_active: bool = false,
 vtable: *const VTable,
 component: Component,
 
@@ -16,37 +17,34 @@ pub fn new(allocator: std.mem.Allocator, vtable: *const VTable) Self {
     };
 }
 
-pub fn sync(component: *Component, graphics: *Graphics) anyerror!void {
+pub fn sync(component: *Component, app:*App, graphics: *Graphics) anyerror!void {
     _ = graphics;
-
-    const self = component.getStruct(Self);
-    const abs_pos = component.getAbsPos();
-    const mouse_pos = Position(f32){ .x = 0, .y = 0 }; // TODO Get Mouse Position
-
-    if(ui.AABB(f32).fromStructs(abs_pos, self.size).contains(mouse_pos)) {
-    }
+    _ = app;
+    _ = component;
 }
 
-pub fn update(component: *Component) anyerror!void {
-    const self = component.getStruct(Self);
-    _ = self;
-    // TODO implement update
+pub fn update(component: *Component, app:*App) anyerror!void {
+    _ = app;
+    _ = component;
 }
 
 pub fn remove(component: *Component) anyerror!void {
     const self  = component.getStruct(Self);
-    _ = self;
+    if(self.is_active) {
+       App.active_app.window.setActiveInteractive(null); 
+    }
 }
 
 const std = @import("std");
 const ui = @import("ui.zig");
+const App = @import("../App.zig");
 const Size = ui.Size;
 const Position = ui.Position;
 const Component = ui.Component;
 const Graphics = @import("../graphics.zig").Graphics;
 
 const VTable = struct {
-    handleEvent: fn (*Event) void,
+    handleEvent: *const fn (*Event) void,
 };
 
 const EventKind = enum {
@@ -70,10 +68,29 @@ const Event = struct {
     char_code: i32 = 0,
     key_code: i32 = 0,
     propagate: bool = true,
-    relX: f32 = 0,
-    relY: f32 = 0,
-    relZ: f32 = 0,
+    relX: f64 = 0,
+    relY: f64 = 0,
+    relZ: f64 = 0,
     touchId: i32 = 0,
     wheelDelta: f32 = 0,
 };
 const Self = @This();
+
+fn testHandleEvent(event:*Event) void {
+    _ = event;
+}
+const testVTable: *const VTable = &.{
+    .handleEvent = testHandleEvent,
+};
+
+test "create_interactive" {
+    try App.init();
+    defer App.deinit();
+
+    var app = try App.create(.{ .title = "" });
+    defer app.destroy();
+
+    var interactive = Self.new(App.arena, testVTable);
+    try app.window.ctx.addChild(&interactive.component);
+    app.window.setActiveInteractive(&interactive);
+}

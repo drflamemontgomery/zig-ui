@@ -1,5 +1,7 @@
 const State = @import("AppState");
 pub const App = struct {
+    var active_app: *App = undefined;
+
     init: ?*const fn (*Self) anyerror!void = null,
     after_init: ?*const fn (*Self) anyerror!void = null,
     main_loop: ?*const fn (*Self) anyerror!void = null,
@@ -52,6 +54,7 @@ pub const App = struct {
     }
 
     pub fn run(self: *Self) !void {
+        active_app = self;
         Window.current = self.window;
         defer Window.current = null;
 
